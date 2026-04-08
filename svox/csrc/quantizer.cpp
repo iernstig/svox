@@ -139,7 +139,7 @@ quantize_median_cut(torch::Tensor data, torch::Tensor weights, int32_t order) {
     torch::Tensor color_id_map = torch::zeros({data.size(0)}, options);
     std::vector<int64_t> tmp(data.size(0));
     std::iota(tmp.begin(), tmp.end(), 0);
-    AT_DISPATCH_FLOATING_TYPES(data.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(data.scalar_type(), __FUNCTION__, [&] {
         int32_t color_idx = 0;
         Comparer<scalar_t> comp(data.accessor<scalar_t, 2>());
         _quantize_median_cut_impl<scalar_t>(comp.data, weights.accessor<scalar_t, 1>(),

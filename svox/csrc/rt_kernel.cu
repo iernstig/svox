@@ -1190,7 +1190,7 @@ torch::Tensor volume_render(TreeSpec &tree, RaysSpec &rays, RenderOptions &opt) 
     const int blocks = CUDA_N_BLOCKS_NEEDED(Q, cuda_n_threads);
     int out_data_dim = get_out_data_dim(opt.format, opt.basis_dim, tree.data.size(4));
     torch::Tensor result = torch::zeros({Q, out_data_dim}, rays.origins.options());
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::render_ray_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, rays, opt,
             result.packed_accessor32<scalar_t, 2, torch::RestrictPtrTraits>());
@@ -1210,7 +1210,7 @@ volume_sample(TreeSpec &tree, RaysSpec &rays, RenderOptions &opt) {
     const int blocks = CUDA_N_BLOCKS_NEEDED(Q, cuda_n_threads);
     torch::Tensor cnt =
         torch::empty({Q, 1}, rays.origins.options().dtype(torch::kInt32));
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::count_along_ray_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, rays, opt,
             cnt.packed_accessor32<int32_t, 2, torch::RestrictPtrTraits>());
@@ -1223,7 +1223,7 @@ volume_sample(TreeSpec &tree, RaysSpec &rays, RenderOptions &opt) {
     torch::Tensor t2 = torch::empty({N}, rays.origins.options());
     torch::Tensor rayid =
         torch::empty({N}, rays.origins.options().dtype(torch::kInt32));
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::sample_along_ray_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, rays, opt,
             offset.packed_accessor32<int32_t, 2, torch::RestrictPtrTraits>(),
@@ -1247,7 +1247,7 @@ void volume_accum(TreeSpec &tree, RaysSpec &rays, RenderOptions &opt) {
 
     auto_cuda_threads();
     const int blocks = CUDA_N_BLOCKS_NEEDED(Q, cuda_n_threads);
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::trace_ray_accum_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, rays, opt);
     });
@@ -1265,7 +1265,7 @@ torch::Tensor volume_render_image(TreeSpec &tree, CameraSpec &cam, RenderOptions
     torch::Tensor result =
         torch::zeros({cam.height, cam.width, out_data_dim}, tree.data.options());
 
-    AT_DISPATCH_FLOATING_TYPES(tree.data.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(tree.data.scalar_type(), __FUNCTION__, [&] {
         device::render_image_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, cam, opt,
             result.packed_accessor32<scalar_t, 3, torch::RestrictPtrTraits>());
@@ -1286,7 +1286,7 @@ torch::Tensor volume_render_backward(TreeSpec &tree, RaysSpec &rays, RenderOptio
     const int blocks = CUDA_N_BLOCKS_NEEDED(Q, cuda_n_threads);
     int out_data_dim = get_out_data_dim(opt.format, opt.basis_dim, tree.data.size(4));
     torch::Tensor result = torch::zeros_like(tree.data);
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::render_ray_backward_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree,
             grad_output.packed_accessor32<scalar_t, 2, torch::RestrictPtrTraits>(),
@@ -1311,7 +1311,7 @@ torch::Tensor volume_render_image_backward(TreeSpec &tree, CameraSpec &cam,
     int out_data_dim = get_out_data_dim(opt.format, opt.basis_dim, tree.data.size(4));
     torch::Tensor result = torch::zeros_like(tree.data);
 
-    AT_DISPATCH_FLOATING_TYPES(tree.data.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(tree.data.scalar_type(), __FUNCTION__, [&] {
         device::render_image_backward_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree,
             grad_output.packed_accessor32<scalar_t, 3, torch::RestrictPtrTraits>(), cam,
@@ -1339,7 +1339,7 @@ se_grad(TreeSpec &tree, RaysSpec &rays, torch::Tensor color, RenderOptions &opt)
     torch::Tensor result = torch::zeros({Q, out_data_dim}, rays.origins.options());
     torch::Tensor grad = torch::zeros_like(tree.data);
     torch::Tensor hessdiag = torch::zeros_like(tree.data);
-    AT_DISPATCH_FLOATING_TYPES(rays.origins.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(rays.origins.scalar_type(), __FUNCTION__, [&] {
         device::se_grad_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, rays, opt,
             color.packed_accessor32<scalar_t, 2, torch::RestrictPtrTraits>(),
@@ -1372,7 +1372,7 @@ se_grad_persp(TreeSpec &tree, CameraSpec &cam, RenderOptions &opt,
     torch::Tensor grad = torch::zeros_like(tree.data);
     torch::Tensor hessdiag = torch::zeros_like(tree.data);
 
-    AT_DISPATCH_FLOATING_TYPES(tree.data.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(tree.data.scalar_type(), __FUNCTION__, [&] {
         device::se_grad_persp_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             tree, cam, opt,
             color.packed_accessor32<scalar_t, 3, torch::RestrictPtrTraits>(),
@@ -1396,7 +1396,7 @@ std::vector<torch::Tensor> grid_weight_render(torch::Tensor data, CameraSpec &ca
     torch::Tensor grid_weight = torch::zeros_like(data);
     torch::Tensor grid_hit = torch::zeros_like(data);
 
-    AT_DISPATCH_FLOATING_TYPES(data.type(), __FUNCTION__, [&] {
+    AT_DISPATCH_FLOATING_TYPES(data.scalar_type(), __FUNCTION__, [&] {
         device::grid_weight_render_kernel<scalar_t><<<blocks, cuda_n_threads>>>(
             data.packed_accessor32<scalar_t, 3, torch::RestrictPtrTraits>(), cam, opt,
             offset.data<scalar_t>(), scaling.data<scalar_t>(),
