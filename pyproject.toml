@@ -1,0 +1,33 @@
+[build-system]
+requires = [
+    "setuptools>=64",
+    "wheel",
+    "pybind11>=2.5.0",
+    "torch",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "svox"
+description = "Sparse voxel N^3-tree data structure using CUDA"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE.txt" }
+authors = [
+    { name = "Alex Yu", email = "alexyu99126@gmail.com" },
+]
+dependencies = [
+    "torch",
+]
+dynamic = ["version"]
+
+[project.urls]
+Documentation = "https://svox.readthedocs.io"
+Homepage = "https://alexyu.net/plenoctrees"
+
+[tool.setuptools]
+packages = ["svox"]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = { attr = "svox.version.__version__" }

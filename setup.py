@@ -5,12 +5,6 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 ROOT_DIR = osp.dirname(osp.abspath(__file__))
 
-__version__ = None
-exec(open("svox/version.py", "r").read())
-
-CUDA_FLAGS = []
-INSTALL_REQUIREMENTS = []
-
 try:
     ext_modules = [
         CUDAExtension(
@@ -32,15 +26,7 @@ except:
     ext_modules = []
 
 setup(
-    name="svox",
-    version=__version__,
-    author="Alex Yu",
-    author_email="alexyu99126@gmail.com",
-    description="Sparse voxel N^3-tree data structure using CUDA",
-    long_description="Sparse voxel N^3-tree data structure PyTorch extension, using CUDA",
     ext_modules=ext_modules,
-    setup_requires=["pybind11>=2.5.0"],
-    packages=["svox", "svox.csrc"],
     cmdclass={"build_ext": BuildExtension},
     zip_safe=False,
 )
