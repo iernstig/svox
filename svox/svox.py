@@ -842,7 +842,7 @@ class N3Tree(nn.Module):
             free = self.parent_depth[:n_int, 0] == -1
             csum = torch.cumsum(free, dim=0)
 
-            remain_ids = torch.arange(n_int, dtype=torch.long)[~free]
+            remain_ids = torch.arange(n_int, dtype=torch.long, device=self.child.device)[~free]
             remain_parents = (
                 *self._unpack_index(self.parent_depth[remain_ids, 0]).long().T,
             )
