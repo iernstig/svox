@@ -730,7 +730,7 @@ class N3Tree(nn.Module):
                 depths = self.parent_depth[sel[0], 1]
                 # Filter by depth & leaves
                 good_mask = (depths < self.depth_limit) & (self.child[sel] == 0)
-                sel = [t[good_mask] for t in sel]
+                sel = tuple(t[good_mask] for t in sel)
                 leaf_node = torch.stack(sel, dim=-1)
                 num_nc = len(sel[0])
                 if num_nc == 0:
